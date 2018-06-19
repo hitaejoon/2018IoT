@@ -8,12 +8,12 @@ int pin_UL_OUT = 30;
 
 #define        COV_RATIO                       0.2            //ug/m3
 #define        NO_DUST_VOLTAGE                 400            //mv
-#define        SYS_VOLTAGE                     5000     
+#define        SYS_VOLTAGE                     5000
 #include <SPI.h>
 #include <WiFi.h>
 #include <dht11.h>
-dht11 DHT11; 
-int pin_DHT11 = 40; 
+dht11 DHT11;
+int pin_DHT11 = 40;
 
 //Step motor OUT1A OUT1B OUT2A OUT2B
 int pin_STEP[4] = {25, 26, 27, 28};
@@ -34,13 +34,13 @@ unsigned long microseconds, distance_cm;
 /*
 private function
 */
- 
+
 int Filter(int m)
 {
   static int flag_first = 0, _buff[10], sum;
   const int _buff_max = 10;
   int i;
-  
+
   if(flag_first == 0)
   {
     flag_first = 1;
@@ -61,7 +61,7 @@ int Filter(int m)
     }
     _buff[9] = m;
     sum += _buff[9];
-    
+
     i = sum / 10.0;
     return i;
   }
@@ -79,9 +79,9 @@ WiFiServer server(80);
 void setup() {
 
   // Stepmotor pin OUTPUT setup
-  for(int i=0; i<4; i++) 
+  for(int i=0; i<4; i++)
        pinMode(pin_STEP[i], OUTPUT);
-       
+
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
   // Out pin Input Setup
@@ -142,18 +142,18 @@ void loop() {
           client.println("HTTP/1.1 200 OK");
           client.println("Content-Type: text/html");
           client.println("Connection: close");  // the connection will be closed after completion of the response
-          client.println("Refresh: 5");  // refresh the page automatically every 5 sec
+          client.println("Refresh: 3");  // refresh the page automatically every 3 sec
           client.println();
           client.println("<!DOCTYPE HTML>");
           client.println("<html>");
-          
+
           //Measure Temperature & Humidity by DHT11 sensor
           int chk = DHT11.read(pin_DHT11);
 
           //Ultrasonic wave transmission to check the window is closed or not
           digitalWrite(pin_UL_TRIG, 0); // Output pin_ULTRASONIC_T to LOW
           delayMicroseconds(2);
-          // pull the Trig pin to high level for more than 10us impulse 
+          // pull the Trig pin to high level for more than 10us impulse
           digitalWrite(pin_UL_TRIG, 1); // Output pin_ULTRASONIC_T to HIGH
           delayMicroseconds(10);
           digitalWrite(pin_UL_TRIG, 0); // Output pin_ULTRASONIC_T to LOW
@@ -179,7 +179,7 @@ void loop() {
           microseconds = pulseIn(pin_UL_OUT, 1, 24000);
           distance_cm = microseconds * 17/1000; // Calculate distance from time
 
-          
+
           client.println("*********************************** 16 Jo ***********************************");
           client.println("<br />");
           client.print("The current dust concentration is: ");
@@ -195,11 +195,11 @@ void loop() {
           client.print("[%]");
           client.print("<br />");
           client.print(distance_cm);
-          client.print(" cm"); 
+          client.print(" cm");
           client.println("<br />");
           client.println("</html>");
           if(DHT11.humidity>=70 || density>=100){  // Humidity 70%, Microdust 100 ug/m3 -> Window closed
-            if(distance_cm > 5){
+            if(distance_cm > 6){
               turnStepmotor();
             }
           }
@@ -224,8 +224,8 @@ void loop() {
 }
 
 void turnStepmotor() {
-  // 1상 제어 시계방향 회전
-  for(int i=0; i<1024 ; i++)
+  // 시계방향 회전
+  for(int i=0; i<512 ; i++)
   {
     digitalWrite(pin_STEP[3], 1);
     digitalWrite(pin_STEP[2], 0);
